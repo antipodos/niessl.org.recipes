@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:dinner.niessl.org)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -Command:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(dart format:*)",
+      "Bash(flutter test:*)",
+      "Bash(python3:*)",
+      "Bash(dart fix:*)",
+      "Bash(flutter emulators:*)",
+      "Bash(flutter devices:*)"
+    ]
+  }
+}
