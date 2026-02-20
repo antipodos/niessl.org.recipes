@@ -30,11 +30,11 @@ the repository root (single project structure per plan.md).
 
 **Purpose**: Create Flutter project and configure all tooling.
 
-- [ ] T001 Initialize Flutter project at repository root: `flutter create --org org.niessl --project-name niessl_recipes .` (skip if pubspec.yaml already exists)
-- [ ] T002 Update pubspec.yaml: set name to `niessl_recipes`, description to "Recipe companion app for dinner.niessl.org"; add dependencies: `flutter_riverpod: ^2.4.0`, `http: ^1.2.0`, `flutter_markdown: ^0.7.0`, `shared_preferences: ^2.3.0`, `wakelock_plus: ^1.2.0`; add dev dependencies: `flutter_lints: ^4.0.0`, `integration_test: {sdk: flutter}`
-- [ ] T003 [P] Update analysis_options.yaml at repository root: include `package:flutter_lints/flutter.yaml`; add `prefer_const_constructors`, `prefer_const_literals_to_create_immutables` to lints
-- [ ] T004 [P] Add WAKE_LOCK permission to android/app/src/main/AndroidManifest.xml inside `<manifest>` tag: `<uses-permission android:name="android.permission.WAKE_LOCK"/>`
-- [ ] T005 Run `flutter pub get` at repository root; verify zero errors and zero warnings
+- [x] T001 Initialize Flutter project at repository root: `flutter create --org org.niessl --project-name niessl_recipes .` (skip if pubspec.yaml already exists)
+- [x] T002 Update pubspec.yaml: set name to `niessl_recipes`, description to "Recipe companion app for dinner.niessl.org"; add dependencies: `flutter_riverpod: ^2.4.0`, `http: ^1.2.0`, `flutter_markdown: ^0.7.0`, `shared_preferences: ^2.3.0`, `wakelock_plus: ^1.2.0`; add dev dependencies: `flutter_lints: ^4.0.0`, `integration_test: {sdk: flutter}`
+- [x] T003 [P] Update analysis_options.yaml at repository root: include `package:flutter_lints/flutter.yaml`; add `prefer_const_constructors`, `prefer_const_literals_to_create_immutables` to lints
+- [x] T004 [P] Add WAKE_LOCK permission to android/app/src/main/AndroidManifest.xml inside `<manifest>` tag: `<uses-permission android:name="android.permission.WAKE_LOCK"/>`
+- [x] T005 Run `flutter pub get` at repository root; verify zero errors and zero warnings
 
 ---
 
@@ -48,17 +48,17 @@ the repository root (single project structure per plan.md).
 
 ### Tests for Foundational Layer
 
-- [ ] T006 [P] Write failing unit tests in test/unit/recipe_service_test.dart: test `RecipeSummary.fromJson` (valid JSON, missing `tags` defaults to empty list), `RecipeDetail.fromJson` (valid, empty `recipe` string), `Tag.fromJson` (valid); test `RecipeService.buildTagMap` (correct URL-to-tag mapping from mock tag index responses); test cache serialization round-trip (encode → decode → equals original)
-- [ ] T007 [P] Write failing unit tests in test/unit/filter_logic_test.dart: test case-insensitive search (partial match, no match, empty query returns all), test tag OR filter (single tag, multiple tags, no tags selected returns all), test combined search + tag filter (AND across the two), test alphabetical sort
+- [x] T006 [P] Write failing unit tests in test/unit/recipe_service_test.dart: test `RecipeSummary.fromJson` (valid JSON, missing `tags` defaults to empty list), `RecipeDetail.fromJson` (valid, empty `recipe` string), `Tag.fromJson` (valid); test `RecipeService.buildTagMap` (correct URL-to-tag mapping from mock tag index responses); test cache serialization round-trip (encode → decode → equals original)
+- [x] T007 [P] Write failing unit tests in test/unit/filter_logic_test.dart: test case-insensitive search (partial match, no match, empty query returns all), test tag OR filter (single tag, multiple tags, no tags selected returns all), test combined search + tag filter (AND across the two), test alphabetical sort
 
 ### Foundational Implementation
 
-- [ ] T008 [P] Create lib/models/recipe.dart: define `RecipeSummary({required String name, required String url, List<String> tags = const []})` with `fromJson` factory and `copyWith(tags:)` method; define `RecipeDetail({required String name, required String recipe})` with `fromJson` factory; define `Tag({required String name, required String url})` with `fromJson` factory; all classes use `const` constructors
-- [ ] T009 [P] Create lib/theme.dart: define `appLightTheme` and `appDarkTheme` as `ThemeData` with `useMaterial3: true`, `colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFB85C38), brightness: Brightness.light/dark)`; no hardcoded raw colors anywhere — all values derived from `colorScheme`
-- [ ] T010 [P] Create shared widgets: lib/widgets/loading_view.dart (centered `CircularProgressIndicator.adaptive()` with padding); lib/widgets/error_view.dart (Column: icon + `message` Text + `ElevatedButton('Retry', onPressed: onRetry)`); lib/widgets/empty_state_view.dart (Column: icon + "No recipes found" Text + optional hint Text); all widgets use only theme-derived colors
-- [ ] T011 Create lib/services/recipe_service.dart with `RecipeService` class: (1) `Future<({List<RecipeSummary> recipes, List<Tag> tags})> fetchAll()` — reads `shared_preferences` cache first (keys: `cache_recipes_index`, `cache_tags_map`), fetches `/recipes/index.json` and `/tags/index.json` in parallel via `http.get` with 10-second timeout, then fetches all 6 tag indices in parallel, builds `Map<String, List<String>>` tagName→[recipeUrl], enriches `RecipeSummary` list with tags, sorts alphabetically by name, writes result to cache; (2) `Future<RecipeDetail> fetchRecipeDetail(String url)` — reads from `shared_preferences` cache (key: `cache_recipe_${base64Url(url)}`), fetches if not cached, writes to cache
-- [ ] T012 Create lib/providers/providers.dart with Riverpod providers: `recipeServiceProvider` (plain `Provider` returning `RecipeService()`); `appDataProvider` (`FutureProvider` calling `recipeService.fetchAll()`); `recipeDetailProvider` (`FutureProvider.family<RecipeDetail, String>` calling `recipeService.fetchRecipeDetail(url)`); `searchQueryProvider` (`StateProvider<String>` initialized to `''`); `selectedTagsProvider` (`StateProvider<Set<String>>` initialized to `{}`); `filteredRecipesProvider` (`Provider<AsyncValue<List<RecipeSummary>>>` deriving from `appDataProvider`, `searchQueryProvider`, `selectedTagsProvider` — case-insensitive name contains AND (selectedTags.isEmpty OR tags.any(selectedTags.contains)), sorted alphabetically)
-- [ ] T013 Create lib/main.dart: wrap app in `ProviderScope`; `MaterialApp` with `title: 'Recipes'`, `theme: appLightTheme`, `darkTheme: appDarkTheme`, `themeMode: ThemeMode.system`, `home: const RecipeListScreen()`; import `recipe_list_screen.dart` (file created in Phase 3 — create a stub if needed to keep app compilable during development)
+- [x] T008 [P] Create lib/models/recipe.dart: define `RecipeSummary({required String name, required String url, List<String> tags = const []})` with `fromJson` factory and `copyWith(tags:)` method; define `RecipeDetail({required String name, required String recipe})` with `fromJson` factory; define `Tag({required String name, required String url})` with `fromJson` factory; all classes use `const` constructors
+- [x] T009 [P] Create lib/theme.dart: define `appLightTheme` and `appDarkTheme` as `ThemeData` with `useMaterial3: true`, `colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFB85C38), brightness: Brightness.light/dark)`; no hardcoded raw colors anywhere — all values derived from `colorScheme`
+- [x] T010 [P] Create shared widgets: lib/widgets/loading_view.dart (centered `CircularProgressIndicator.adaptive()` with padding); lib/widgets/error_view.dart (Column: icon + `message` Text + `ElevatedButton('Retry', onPressed: onRetry)`); lib/widgets/empty_state_view.dart (Column: icon + "No recipes found" Text + optional hint Text); all widgets use only theme-derived colors
+- [x] T011 Create lib/services/recipe_service.dart with `RecipeService` class: (1) `Future<({List<RecipeSummary> recipes, List<Tag> tags})> fetchAll()` — reads `shared_preferences` cache first (keys: `cache_recipes_index`, `cache_tags_map`), fetches `/recipes/index.json` and `/tags/index.json` in parallel via `http.get` with 10-second timeout, then fetches all 6 tag indices in parallel, builds `Map<String, List<String>>` tagName→[recipeUrl], enriches `RecipeSummary` list with tags, sorts alphabetically by name, writes result to cache; (2) `Future<RecipeDetail> fetchRecipeDetail(String url)` — reads from `shared_preferences` cache (key: `cache_recipe_${base64Url(url)}`), fetches if not cached, writes to cache
+- [x] T012 Create lib/providers/providers.dart with Riverpod providers: `recipeServiceProvider` (plain `Provider` returning `RecipeService()`); `appDataProvider` (`FutureProvider` calling `recipeService.fetchAll()`); `recipeDetailProvider` (`FutureProvider.family<RecipeDetail, String>` calling `recipeService.fetchRecipeDetail(url)`); `searchQueryProvider` (`StateProvider<String>` initialized to `''`); `selectedTagsProvider` (`StateProvider<Set<String>>` initialized to `{}`); `filteredRecipesProvider` (`Provider<AsyncValue<List<RecipeSummary>>>` deriving from `appDataProvider`, `searchQueryProvider`, `selectedTagsProvider` — case-insensitive name contains AND (selectedTags.isEmpty OR tags.any(selectedTags.contains)), sorted alphabetically)
+- [x] T013 Create lib/main.dart: wrap app in `ProviderScope`; `MaterialApp` with `title: 'Recipes'`, `theme: appLightTheme`, `darkTheme: appDarkTheme`, `themeMode: ThemeMode.system`, `home: const RecipeListScreen()`; import `recipe_list_screen.dart` (file created in Phase 3 — create a stub if needed to keep app compilable during development)
 
 **Checkpoint**: Run `flutter test test/unit/` — all foundational unit tests MUST pass before proceeding.
 
@@ -74,14 +74,14 @@ the repository root (single project structure per plan.md).
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Write failing integration tests in integration_test/app_test.dart for US1: (a) app launches and `RecipeTile` widgets appear within 3 seconds; (b) tapping a recipe tile navigates to detail screen showing `MarkdownBody` with ingredients and directions; (c) pressing back from detail restores the list at the same scroll position; (d) run in airplane mode after cache is warm — list still displays
+- [x] T014 [P] [US1] Write failing integration tests in integration_test/app_test.dart for US1: (a) app launches and `RecipeTile` widgets appear within 3 seconds; (b) tapping a recipe tile navigates to detail screen showing `MarkdownBody` with ingredients and directions; (c) pressing back from detail restores the list at the same scroll position; (d) run in airplane mode after cache is warm — list still displays
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Create lib/widgets/recipe_tile.dart: `StatelessWidget` wrapping `ListTile`; `title: Text(recipe.name)` using `Theme.of(context).textTheme.bodyLarge`; `trailing: Row` of small tag label chips (if recipe.tags is non-empty, show up to 2 tags as small Text widgets with theme background); `onTap` callback parameter; no hardcoded colors or sizes
-- [ ] T016 [US1] Create lib/screens/recipe_list_screen.dart: `ConsumerWidget`; `Scaffold` with `AppBar(title: Text('Recipes'))`; body watches `filteredRecipesProvider`; `AsyncValue.when`: loading → `LoadingView()`, error → `ErrorView(message: ..., onRetry: () => ref.invalidate(appDataProvider))`, data → `RefreshIndicator(onRefresh: () async => ref.invalidate(appDataProvider), child: ListView.builder(controller: _scrollController, itemCount: recipes.length, itemBuilder: (_, i) => RecipeTile(recipe: recipes[i], onTap: () => Navigator.push(...RecipeDetailScreen(url: recipes[i].url, name: recipes[i].name)))))`; `ScrollController` stored in widget state for scroll restoration
-- [ ] T017 [US1] Create lib/screens/recipe_detail_screen.dart: `ConsumerWidget` receiving `url` and `name` as constructor parameters; `Scaffold` with `AppBar(title: Text(name))`; body watches `recipeDetailProvider(url)`; `AsyncValue.when`: loading → `LoadingView()`, error → `ErrorView(message: ..., onRetry: () => ref.invalidate(recipeDetailProvider(url)))`, data → `SingleChildScrollView(padding: EdgeInsets.all(16), child: MarkdownBody(data: detail.recipe, styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))))`
-- [ ] T018 [US1] Wire navigation in lib/screens/recipe_list_screen.dart: `RecipeTile.onTap` calls `Navigator.push(context, MaterialPageRoute(builder: (_) => RecipeDetailScreen(url: recipe.url, name: recipe.name)))`; `ScrollController` captures offset before push and scrolls to it after `await Navigator.push` returns
+- [x] T015 [P] [US1] Create lib/widgets/recipe_tile.dart: `StatelessWidget` wrapping `ListTile`; `title: Text(recipe.name)` using `Theme.of(context).textTheme.bodyLarge`; `trailing: Row` of small tag label chips (if recipe.tags is non-empty, show up to 2 tags as small Text widgets with theme background); `onTap` callback parameter; no hardcoded colors or sizes
+- [x] T016 [US1] Create lib/screens/recipe_list_screen.dart: `ConsumerWidget`; `Scaffold` with `AppBar(title: Text('Recipes'))`; body watches `filteredRecipesProvider`; `AsyncValue.when`: loading → `LoadingView()`, error → `ErrorView(message: ..., onRetry: () => ref.invalidate(appDataProvider))`, data → `RefreshIndicator(onRefresh: () async => ref.invalidate(appDataProvider), child: ListView.builder(controller: _scrollController, itemCount: recipes.length, itemBuilder: (_, i) => RecipeTile(recipe: recipes[i], onTap: () => Navigator.push(...RecipeDetailScreen(url: recipes[i].url, name: recipes[i].name)))))`; `ScrollController` stored in widget state for scroll restoration
+- [x] T017 [US1] Create lib/screens/recipe_detail_screen.dart: `ConsumerWidget` receiving `url` and `name` as constructor parameters; `Scaffold` with `AppBar(title: Text(name))`; body watches `recipeDetailProvider(url)`; `AsyncValue.when`: loading → `LoadingView()`, error → `ErrorView(message: ..., onRetry: () => ref.invalidate(recipeDetailProvider(url)))`, data → `SingleChildScrollView(padding: EdgeInsets.all(16), child: MarkdownBody(data: detail.recipe, styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))))`
+- [x] T018 [US1] Wire navigation in lib/screens/recipe_list_screen.dart: `RecipeTile.onTap` calls `Navigator.push(context, MaterialPageRoute(builder: (_) => RecipeDetailScreen(url: recipe.url, name: recipe.name)))`; `ScrollController` captures offset before push and scrolls to it after `await Navigator.push` returns
 
 **Checkpoint**: Run `flutter test integration_test/app_test.dart` — US1 scenarios MUST pass independently.
 
@@ -95,12 +95,12 @@ the repository root (single project structure per plan.md).
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Add failing integration tests for US2 to integration_test/app_test.dart: (a) entering "pan" in search field shows only recipes whose names contain "pan" (case-insensitive); (b) entering "zzzzz" shows `EmptyStateView`; (c) clearing the search field restores the full recipe list
+- [x] T019 [P] [US2] Add failing integration tests for US2 to integration_test/app_test.dart: (a) entering "pan" in search field shows only recipes whose names contain "pan" (case-insensitive); (b) entering "zzzzz" shows `EmptyStateView`; (c) clearing the search field restores the full recipe list
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create lib/widgets/search_bar_widget.dart: `ConsumerWidget`; `TextField` with `InputDecoration(hintText: 'Search recipes...', prefixIcon: Icon(Icons.search), suffixIcon: query.isNotEmpty ? IconButton(icon: Icon(Icons.clear), onPressed: () => ref.read(searchQueryProvider.notifier).state = '') : null)`; `onChanged: (v) => ref.read(searchQueryProvider.notifier).state = v`; uses only theme-derived decoration colors
-- [ ] T021 [US2] Integrate SearchBarWidget into lib/screens/recipe_list_screen.dart: add `SearchBarWidget()` as the first item in a `Column` above the `ListView.builder` (or use `SliverList` with a header); ensure `filteredRecipesProvider` is already wired (it already consumes `searchQueryProvider`); show `EmptyStateView(hint: 'Try a different search term')` when filtered list is empty
+- [x] T020 [P] [US2] Create lib/widgets/search_bar_widget.dart: `ConsumerWidget`; `TextField` with `InputDecoration(hintText: 'Search recipes...', prefixIcon: Icon(Icons.search), suffixIcon: query.isNotEmpty ? IconButton(icon: Icon(Icons.clear), onPressed: () => ref.read(searchQueryProvider.notifier).state = '') : null)`; `onChanged: (v) => ref.read(searchQueryProvider.notifier).state = v`; uses only theme-derived decoration colors
+- [x] T021 [US2] Integrate SearchBarWidget into lib/screens/recipe_list_screen.dart: add `SearchBarWidget()` as the first item in a `Column` above the `ListView.builder` (or use `SliverList` with a header); ensure `filteredRecipesProvider` is already wired (it already consumes `searchQueryProvider`); show `EmptyStateView(hint: 'Try a different search term')` when filtered list is empty
 
 **Checkpoint**: Verify US2 works independently — search with no tags selected should filter the full list.
 
@@ -114,12 +114,12 @@ the repository root (single project structure per plan.md).
 
 ### Tests for User Story 3
 
-- [ ] T022 [P] [US3] Add failing integration tests for US3 to integration_test/app_test.dart: (a) all 6 tag chips are visible; (b) tapping "indian" chip shows only the 10 Indian recipes; (c) tapping "sweet" additionally shows recipes from either tag (OR); (d) tapping both chips again to deselect restores the full list; (e) with search "masala" active and "indian" tag selected — only "Chana Masala", "Paneer Butter Masala", etc. are shown (intersection of both filters)
+- [x] T022 [P] [US3] Add failing integration tests for US3 to integration_test/app_test.dart: (a) all 6 tag chips are visible; (b) tapping "indian" chip shows only the 10 Indian recipes; (c) tapping "sweet" additionally shows recipes from either tag (OR); (d) tapping both chips again to deselect restores the full list; (e) with search "masala" active and "indian" tag selected — only "Chana Masala", "Paneer Butter Masala", etc. are shown (intersection of both filters)
 
 ### Implementation for User Story 3
 
-- [ ] T023 [P] [US3] Create lib/widgets/tag_chip_bar.dart: `ConsumerWidget`; `SizedBox(height: 48, child: ListView(scrollDirection: Axis.horizontal, children: tags.map((tag) => Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: FilterChip(label: Text(tag.name), selected: selectedTags.contains(tag.name), onSelected: (v) => ref.read(selectedTagsProvider.notifier).update((s) => v ? {...s, tag.name} : s.difference({tag.name}))))).toList()))`; uses `Theme.of(context).colorScheme` for chip colors
-- [ ] T024 [US3] Integrate TagChipBar into lib/screens/recipe_list_screen.dart: add `TagChipBar()` between `SearchBarWidget` and the `ListView.builder`; `filteredRecipesProvider` already combines both filters (no provider changes needed); confirm `EmptyStateView` shows when both filters combine to zero results with hint 'Try removing some filters'
+- [x] T023 [P] [US3] Create lib/widgets/tag_chip_bar.dart: `ConsumerWidget`; `SizedBox(height: 48, child: ListView(scrollDirection: Axis.horizontal, children: tags.map((tag) => Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: FilterChip(label: Text(tag.name), selected: selectedTags.contains(tag.name), onSelected: (v) => ref.read(selectedTagsProvider.notifier).update((s) => v ? {...s, tag.name} : s.difference({tag.name}))))).toList()))`; uses `Theme.of(context).colorScheme` for chip colors
+- [x] T024 [US3] Integrate TagChipBar into lib/screens/recipe_list_screen.dart: add `TagChipBar()` between `SearchBarWidget` and the `ListView.builder`; `filteredRecipesProvider` already combines both filters (no provider changes needed); confirm `EmptyStateView` shows when both filters combine to zero results with hint 'Try removing some filters'
 
 **Checkpoint**: Verify US3 works independently — tag filter with no search term should work correctly.
 
@@ -133,11 +133,11 @@ the repository root (single project structure per plan.md).
 
 ### Tests for User Story 4
 
-- [ ] T025 [P] [US4] Add failing integration tests for US4 to integration_test/app_test.dart: (a) recipe detail screen has a wakelock toggle icon button in the AppBar; (b) tapping it changes its icon state (visual feedback); (c) navigating back from detail screen while wakelock is active does not throw an error (tests that `dispose()` calls `WakelockPlus.disable()`)
+- [x] T025 [P] [US4] Add failing integration tests for US4 to integration_test/app_test.dart: (a) recipe detail screen has a wakelock toggle icon button in the AppBar; (b) tapping it changes its icon state (visual feedback); (c) navigating back from detail screen while wakelock is active does not throw an error (tests that `dispose()` calls `WakelockPlus.disable()`)
 
 ### Implementation for User Story 4
 
-- [ ] T026 [US4] Add wakelock toggle to lib/screens/recipe_detail_screen.dart: convert to `StatefulConsumerWidget` (or use local state via `useState` if hooks are available); add `bool _keepAwake = false` state; add `IconButton` to `AppBar.actions`: `icon: Icon(_keepAwake ? Icons.lightbulb : Icons.lightbulb_outline)`, `tooltip: _keepAwake ? 'Screen will stay on' : 'Keep screen on'`, `onPressed: () async { setState(() => _keepAwake = !_keepAwake); if (_keepAwake) { await WakelockPlus.enable(); } else { await WakelockPlus.disable(); } }`; override `dispose()` to call `WakelockPlus.disable()` unconditionally
+- [x] T026 [US4] Add wakelock toggle to lib/screens/recipe_detail_screen.dart: convert to `StatefulConsumerWidget` (or use local state via `useState` if hooks are available); add `bool _keepAwake = false` state; add `IconButton` to `AppBar.actions`: `icon: Icon(_keepAwake ? Icons.lightbulb : Icons.lightbulb_outline)`, `tooltip: _keepAwake ? 'Screen will stay on' : 'Keep screen on'`, `onPressed: () async { setState(() => _keepAwake = !_keepAwake); if (_keepAwake) { await WakelockPlus.enable(); } else { await WakelockPlus.disable(); } }`; override `dispose()` to call `WakelockPlus.disable()` unconditionally
 
 **Checkpoint**: All four user stories should now be independently functional.
 
@@ -147,11 +147,11 @@ the repository root (single project structure per plan.md).
 
 **Purpose**: Accessibility, quality gates, and final validation.
 
-- [ ] T027 [P] Add `Semantics` labels to interactive widgets: `RecipeTile` — wrap with `Semantics(label: '${recipe.name}, tap to view recipe')`; `TagChipBar` chips — `FilterChip` already announces selected state; verify tooltip text; `SearchBarWidget` — `TextField` already has hint; add explicit `semanticsLabel` to clear button; wakelock `IconButton` — `tooltip` already provides label; verify with TalkBack/VoiceOver
-- [ ] T028 [P] Run `flutter analyze` at repository root; fix ALL reported issues (zero warnings policy per Constitution Principle I)
-- [ ] T029 [P] Run `dart format --set-exit-if-changed .` at repository root; fix ALL formatting issues (zero diffs required per Constitution Principle I)
-- [ ] T030 Run `flutter test --coverage` at repository root; check `coverage/lcov.info`; verify ≥80% line coverage on `lib/`; add targeted unit or widget tests for any uncovered public logic until threshold is met
-- [ ] T031 Run full integration test suite on Android emulator: `flutter test integration_test/app_test.dart`; all US1–US4 scenarios MUST pass
+- [x] T027 [P] Add `Semantics` labels to interactive widgets: `RecipeTile` — wrap with `Semantics(label: '${recipe.name}, tap to view recipe')`; `TagChipBar` chips — `FilterChip` already announces selected state; verify tooltip text; `SearchBarWidget` — `TextField` already has hint; add explicit `semanticsLabel` to clear button; wakelock `IconButton` — `tooltip` already provides label; verify with TalkBack/VoiceOver
+- [x] T028 [P] Run `flutter analyze` at repository root; fix ALL reported issues (zero warnings policy per Constitution Principle I)
+- [x] T029 [P] Run `dart format --set-exit-if-changed .` at repository root; fix ALL formatting issues (zero diffs required per Constitution Principle I)
+- [x] T030 Run `flutter test --coverage` at repository root; check `coverage/lcov.info`; verify ≥80% line coverage on `lib/`; add targeted unit or widget tests for any uncovered public logic until threshold is met
+- [x] T031 Run full integration test suite on Android emulator: `flutter test integration_test/app_test.dart`; all US1–US4 scenarios MUST pass
 - [ ] T032 [P] Run full integration test suite on iOS simulator (macOS only): `flutter test integration_test/app_test.dart`; all US1–US4 scenarios MUST pass
 - [ ] T033 Manually validate all scenarios in quickstart.md on a connected physical device or high-fidelity emulator; confirm dark mode, offline mode, pull-to-refresh, and wakelock all behave correctly
 
