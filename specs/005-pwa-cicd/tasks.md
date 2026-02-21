@@ -160,7 +160,7 @@
 - [x] T012 [P] Run `flutter test` and confirm all 94 tests still pass (web platform addition must not break any existing tests)
 - [x] T013 Run `flutter build web --release --base-href=/niessl.org.recipes/` locally and verify: `build/web/manifest.json` contains `"name": "niessl.org recipes"` and `"theme_color": "#B85C38"` and `"start_url": "/niessl.org.recipes/"`; `build/web/icons/Icon-192.png` exists
 - [ ] T014 Enable GitHub Pages on the repository (one-time, manual): GitHub → Settings → Pages → Source: **GitHub Actions** (not "Deploy from a branch") — required before first deploy; the Actions workflow manages all deployment
-- [ ] T015 [P] Push `005-pwa-cicd` branch and open a PR; confirm the Actions tab shows the workflow file is valid (green parse, all 3 jobs visible in the UI) without merging yet — smoke-tests the YAML syntax
+- [x] T015 [P] Push `005-pwa-cicd` branch and open a PR; confirm the Actions tab shows the workflow file is valid (green parse, all 3 jobs visible in the UI) without merging yet — smoke-tests the YAML syntax
 
 ---
 
