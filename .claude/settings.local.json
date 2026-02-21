@@ -9,7 +9,9 @@
       "Bash(python3:*)",
       "Bash(dart fix:*)",
       "Bash(flutter emulators:*)",
-      "Bash(flutter devices:*)"
+      "Bash(flutter devices:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(dart run:*)"
     ]
   }
 }
