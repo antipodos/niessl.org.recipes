@@ -217,6 +217,132 @@ void main() {
     });
   });
 
+  // T003: RecipeSummary picture field tests
+  group('RecipeSummary.fromJson picture field', () {
+    test('parses picture when present', () {
+      final json = {
+        'name': 'Aloo Matar',
+        'url': 'https://dinner.niessl.org/recipes/aloo-matar/index.json',
+        'picture':
+            'https://dinner.niessl.org/recipes/aloo-matar/photo_200x200.jpg',
+      };
+      final summary = RecipeSummary.fromJson(json);
+      expect(
+        summary.picture,
+        'https://dinner.niessl.org/recipes/aloo-matar/photo_200x200.jpg',
+      );
+    });
+
+    test('picture is null when field absent', () {
+      final json = {
+        'name': 'No Photo',
+        'url': 'https://dinner.niessl.org/recipes/no-photo/index.json',
+      };
+      final summary = RecipeSummary.fromJson(json);
+      expect(summary.picture, isNull);
+    });
+
+    test('picture is null when field is empty string', () {
+      final json = {
+        'name': 'Empty Photo',
+        'url': 'https://dinner.niessl.org/recipes/empty/index.json',
+        'picture': '',
+      };
+      final summary = RecipeSummary.fromJson(json);
+      expect(summary.picture, isNull);
+    });
+
+    test('cache round-trip preserves picture', () {
+      final original = RecipeSummary.fromJson({
+        'name': 'Aloo Matar',
+        'url': 'https://dinner.niessl.org/recipes/aloo-matar/index.json',
+        'picture':
+            'https://dinner.niessl.org/recipes/aloo-matar/photo_200x200.jpg',
+      });
+      final encoded = jsonEncode(original.toJson());
+      final decoded = RecipeSummary.fromJson(
+        jsonDecode(encoded) as Map<String, dynamic>,
+      );
+      expect(decoded.picture, original.picture);
+    });
+
+    test('copyWith preserves picture', () {
+      final original = RecipeSummary.fromJson({
+        'name': 'Test',
+        'url': 'https://example.com/test/index.json',
+        'picture': 'https://example.com/photo.jpg',
+      });
+      final enriched = original.copyWith(tags: ['sweet']);
+      expect(enriched.picture, original.picture);
+    });
+  });
+
+  // T004: RecipeDetail picture + source field tests
+  group('RecipeDetail.fromJson picture and source fields', () {
+    test('parses picture and source when present', () {
+      final json = {
+        'name': 'Aloo Matar',
+        'recipe': '## Ingredients',
+        'picture': 'https://dinner.niessl.org/recipes/aloo-matar/photo.jpg',
+        'source':
+            'https://www.thecuriouschickpea.com/restaurant-style-aloo-matar',
+      };
+      final detail = RecipeDetail.fromJson(json);
+      expect(
+        detail.picture,
+        'https://dinner.niessl.org/recipes/aloo-matar/photo.jpg',
+      );
+      expect(
+        detail.source,
+        'https://www.thecuriouschickpea.com/restaurant-style-aloo-matar',
+      );
+    });
+
+    test('picture and source are null when fields absent', () {
+      final json = {'name': 'Minimal', 'recipe': '## Ingredients'};
+      final detail = RecipeDetail.fromJson(json);
+      expect(detail.picture, isNull);
+      expect(detail.source, isNull);
+    });
+
+    test('picture is null when empty string', () {
+      final json = {
+        'name': 'Test',
+        'recipe': '## Ingredients',
+        'picture': '',
+        'source': 'https://example.com',
+      };
+      final detail = RecipeDetail.fromJson(json);
+      expect(detail.picture, isNull);
+    });
+
+    test('source is null when empty string', () {
+      final json = {
+        'name': 'Test',
+        'recipe': '## Ingredients',
+        'picture': 'https://example.com/photo.jpg',
+        'source': '',
+      };
+      final detail = RecipeDetail.fromJson(json);
+      expect(detail.source, isNull);
+    });
+
+    test('cache round-trip preserves picture and source', () {
+      final original = RecipeDetail.fromJson({
+        'name': 'Aloo Matar',
+        'recipe': '## Ingredients',
+        'picture': 'https://dinner.niessl.org/recipes/aloo-matar/photo.jpg',
+        'source': 'https://www.thecuriouschickpea.com/aloo-matar',
+      });
+      final encoded = jsonEncode(original.toJson());
+      final decoded = RecipeDetail.fromJson(
+        jsonDecode(encoded) as Map<String, dynamic>,
+      );
+      expect(decoded.picture, original.picture);
+      expect(decoded.source, original.source);
+    });
+  });
+
   group('RecipeService HTTP fetching', () {
     setUp(() {
       TestWidgetsFlutterBinding.ensureInitialized();

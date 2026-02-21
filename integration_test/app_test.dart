@@ -121,11 +121,18 @@ void main() {
       await tester.tap(find.widgetWithText(FilterChip, 'indian'));
       await tester.pumpAndSettle();
 
-      // Only Indian recipes (10 total) should be visible.
+      // Only Indian recipes should be visible (count depends on live API data).
       final tiles = tester
           .widgetList<RecipeTile>(find.byType(RecipeTile))
           .toList();
-      expect(tiles.length, 10);
+      expect(tiles, isNotEmpty);
+      for (final tile in tiles) {
+        expect(
+          tile.recipe.tags,
+          contains('indian'),
+          reason: '${tile.recipe.name} should be tagged as indian',
+        );
+      }
     });
 
     testWidgets('deselecting all tags restores full list', (tester) async {
@@ -146,7 +153,7 @@ void main() {
   // US4 — Keep the Screen On While Cooking
   // ---------------------------------------------------------------------------
   group('US4 — Keep the Screen On While Cooking', () {
-    testWidgets('wakelock toggle button exists in recipe detail AppBar', (
+    testWidgets('wakelock toggle TextButton exists in recipe detail AppBar', (
       tester,
     ) async {
       app.main();
@@ -155,21 +162,23 @@ void main() {
       await tester.tap(find.byType(RecipeTile).first);
       await tester.pumpAndSettle(const Duration(seconds: 10));
 
-      // Wakelock toggle is an IconButton in the AppBar actions.
-      expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
+      // Toggle is now a TextButton.icon with label 'Screen off' (inactive).
+      expect(find.text('Screen off'), findsOneWidget);
     });
 
-    testWidgets('tapping wakelock toggle changes icon state', (tester) async {
+    testWidgets('tapping wakelock toggle changes label to "Screen on"', (
+      tester,
+    ) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       await tester.tap(find.byType(RecipeTile).first);
       await tester.pumpAndSettle(const Duration(seconds: 10));
 
-      await tester.tap(find.byIcon(Icons.lightbulb_outline));
+      await tester.tap(find.text('Screen off'));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.lightbulb), findsOneWidget);
+      expect(find.text('Screen on'), findsOneWidget);
     });
 
     testWidgets('navigating back while wakelock is active does not throw', (
@@ -181,7 +190,7 @@ void main() {
       await tester.tap(find.byType(RecipeTile).first);
       await tester.pumpAndSettle(const Duration(seconds: 10));
 
-      await tester.tap(find.byIcon(Icons.lightbulb_outline));
+      await tester.tap(find.text('Screen off'));
       await tester.pumpAndSettle();
 
       final NavigatorState navigator = tester.state(
@@ -191,6 +200,85 @@ void main() {
       await tester.pumpAndSettle();
 
       // No exception thrown — list is back.
+      expect(find.byType(RecipeTile), findsWidgets);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // US5 + US6 — Photo tiles and polished detail screen (T031)
+  // ---------------------------------------------------------------------------
+  group('US5 and US6: photo tiles and polished detail', () {
+    testWidgets('US5: recipe list shows photo tiles with no tag chip widgets', (
+      tester,
+    ) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      // Tags are shown in TagChipBar only, not on the tiles.
+      final tiles = find.byType(RecipeTile);
+      expect(tiles, findsWidgets);
+      // No FilterChip should be rendered inside a RecipeTile subtree.
+      expect(
+        find.byType(FilterChip),
+        findsWidgets,
+      ); // chips exist in TagChipBar
+      for (final tileElement in tiles.evaluate()) {
+        final chipsInTile = find.descendant(
+          of: find.byElementPredicate((e) => e == tileElement),
+          matching: find.byType(FilterChip),
+        );
+        expect(chipsInTile, findsNothing);
+      }
+    });
+
+    testWidgets('US5: tapping tile navigates to detail with slide transition', (
+      tester,
+    ) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      await tester.tap(find.byType(RecipeTile).first);
+      await tester.pumpAndSettle(const Duration(seconds: 10));
+
+      expect(find.byType(RecipeDetailScreen), findsOneWidget);
+    });
+
+    testWidgets(
+      'US6: detail screen shows name heading, photo area, and Divider',
+      (tester) async {
+        app.main();
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+
+        final firstTile = tester.widget<RecipeTile>(
+          find.byType(RecipeTile).first,
+        );
+        final recipeName = firstTile.recipe.name;
+
+        await tester.tap(find.byType(RecipeTile).first);
+        await tester.pumpAndSettle(const Duration(seconds: 10));
+
+        // Name appears in both AppBar and body heading.
+        expect(find.text(recipeName), findsAtLeastNWidgets(2));
+        // Divider always present (separates source/heading from markdown).
+        expect(find.byType(Divider), findsOneWidget);
+        // Hero widget for photo area.
+        expect(find.byType(Hero), findsOneWidget);
+      },
+    );
+
+    testWidgets('US6: pressing back returns to recipe list', (tester) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      await tester.tap(find.byType(RecipeTile).first);
+      await tester.pumpAndSettle(const Duration(seconds: 10));
+
+      final NavigatorState navigator = tester.state(
+        find.byType(Navigator).first,
+      );
+      navigator.pop();
+      await tester.pumpAndSettle();
+
       expect(find.byType(RecipeTile), findsWidgets);
     });
   });

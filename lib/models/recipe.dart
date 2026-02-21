@@ -4,25 +4,39 @@ class RecipeSummary {
   final String name;
   final String url;
   final List<String> tags;
+  final String? picture;
 
   const RecipeSummary({
     required this.name,
     required this.url,
     this.tags = const [],
+    this.picture,
   });
 
   factory RecipeSummary.fromJson(Map<String, dynamic> json) {
+    final pic = json['picture'] as String?;
     return RecipeSummary(
       name: json['name'] as String? ?? '',
       url: json['url'] as String? ?? '',
       tags: (json['tags'] as List<dynamic>?)?.cast<String>() ?? const [],
+      picture: (pic != null && pic.isNotEmpty) ? pic : null,
     );
   }
 
-  Map<String, dynamic> toJson() => {'name': name, 'url': url, 'tags': tags};
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'url': url,
+    'tags': tags,
+    'picture': picture,
+  };
 
   RecipeSummary copyWith({List<String>? tags}) {
-    return RecipeSummary(name: name, url: url, tags: tags ?? this.tags);
+    return RecipeSummary(
+      name: name,
+      url: url,
+      tags: tags ?? this.tags,
+      picture: picture,
+    );
   }
 
   @override
@@ -37,17 +51,33 @@ class RecipeSummary {
 class RecipeDetail {
   final String name;
   final String recipe;
+  final String? picture;
+  final String? source;
 
-  const RecipeDetail({required this.name, required this.recipe});
+  const RecipeDetail({
+    required this.name,
+    required this.recipe,
+    this.picture,
+    this.source,
+  });
 
   factory RecipeDetail.fromJson(Map<String, dynamic> json) {
+    final pic = json['picture'] as String?;
+    final src = json['source'] as String?;
     return RecipeDetail(
       name: json['name'] as String? ?? '',
       recipe: json['recipe'] as String? ?? '',
+      picture: (pic != null && pic.isNotEmpty) ? pic : null,
+      source: (src != null && src.isNotEmpty) ? src : null,
     );
   }
 
-  Map<String, dynamic> toJson() => {'name': name, 'recipe': recipe};
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'recipe': recipe,
+    'picture': picture,
+    'source': source,
+  };
 }
 
 class Tag {

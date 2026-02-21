@@ -13,6 +13,8 @@ import 'package:niessl_recipes/widgets/loading_view.dart';
 import 'package:niessl_recipes/widgets/recipe_tile.dart';
 import 'package:niessl_recipes/widgets/search_bar_widget.dart';
 import 'package:niessl_recipes/widgets/tag_chip_bar.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:niessl_recipes/widgets/equalizer_loading_view.dart';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -45,6 +47,19 @@ final _tags = [
 const _detail = RecipeDetail(
   name: 'Pancakes',
   recipe: '## Ingredients\n- Flour\n- Eggs\n\n## Directions\nMix and cook.',
+);
+
+final _recipeWithPhoto = const RecipeSummary(
+  name: 'Pizza',
+  url: 'https://dinner.niessl.org/recipes/pizza/index.json',
+  picture: 'https://dinner.niessl.org/recipes/pizza/photo.jpg',
+);
+
+const _detailWithMedia = RecipeDetail(
+  name: 'Pancakes',
+  recipe: '## Ingredients\n- Flour\n- Eggs\n\n## Directions\nMix and cook.',
+  picture: 'https://dinner.niessl.org/recipes/pancakes/photo.jpg',
+  source: 'https://example.com/pancakes',
 );
 
 /// Builds a testable widget tree with Riverpod provider overrides.
@@ -148,39 +163,6 @@ void main() {
       expect(find.text('Sourdough'), findsOneWidget);
     });
 
-    testWidgets('shows no trailing chips when tags are empty', (tester) async {
-      final recipe = const RecipeSummary(
-        name: 'Sourdough',
-        url: 'https://x.com',
-      );
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RecipeTile(recipe: recipe, onTap: () {}),
-          ),
-        ),
-      );
-      expect(find.byType(Container), findsNothing); // tag chip containers
-    });
-
-    testWidgets('shows up to 2 tag chips when recipe has tags', (tester) async {
-      final recipe = const RecipeSummary(
-        name: 'Curry',
-        url: 'https://x.com',
-        tags: ['indian', 'main', 'spicy'],
-      );
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RecipeTile(recipe: recipe, onTap: () {}),
-          ),
-        ),
-      );
-      expect(find.text('indian'), findsOneWidget);
-      expect(find.text('main'), findsOneWidget);
-      expect(find.text('spicy'), findsNothing); // only first 2 shown
-    });
-
     testWidgets('calls onTap when the tile is tapped', (tester) async {
       bool tapped = false;
       final recipe = const RecipeSummary(
@@ -194,8 +176,58 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byType(ListTile));
+      await tester.tap(find.byType(InkWell).first);
       expect(tapped, isTrue);
+    });
+
+    // T013 — photo tile tests (fail until T018 implemented)
+    testWidgets('with picture renders Hero and CachedNetworkImage', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RecipeTile(recipe: _recipeWithPhoto, onTap: () {}),
+          ),
+        ),
+      );
+      expect(find.byType(Hero), findsOneWidget);
+      expect(find.byType(CachedNetworkImage), findsOneWidget);
+    });
+
+    testWidgets(
+      'without picture renders Hero and restaurant icon placeholder',
+      (tester) async {
+        final recipe = const RecipeSummary(
+          name: 'Sourdough',
+          url: 'https://x.com',
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: RecipeTile(recipe: recipe, onTap: () {}),
+            ),
+          ),
+        );
+        expect(find.byType(Hero), findsOneWidget);
+        expect(find.byIcon(Icons.restaurant), findsOneWidget);
+      },
+    );
+
+    testWidgets('renders no FilterChip widgets', (tester) async {
+      final recipe = const RecipeSummary(
+        name: 'Curry',
+        url: 'https://x.com',
+        tags: ['indian', 'main', 'spicy'],
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RecipeTile(recipe: recipe, onTap: () {}),
+          ),
+        ),
+      );
+      expect(find.byType(FilterChip), findsNothing);
     });
   });
 
@@ -228,14 +260,18 @@ void main() {
 
   // ─── RecipeListScreen ──────────────────────────────────────────────────────
   group('RecipeListScreen', () {
-    testWidgets('shows LoadingView while recipes are loading', (tester) async {
+    // T014 — updated loading state test (fails until T019 implemented)
+    testWidgets('shows EqualizerLoadingView while recipes are loading', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildWithOverrides(
           const RecipeListScreen(),
           filteredRecipes: const AsyncValue.loading(),
         ),
       );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(EqualizerLoadingView), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
     testWidgets('shows ErrorView on fetch error', (tester) async {
@@ -259,9 +295,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(RecipeTile), findsNWidgets(2));
+      // Photo tiles are tall (AspectRatio 1.6); ListView.builder only builds
+      // visible items, so only assert at least one tile is rendered.
+      expect(find.byType(RecipeTile), findsAtLeastNWidgets(1));
       expect(find.text('Pancakes'), findsOneWidget);
-      expect(find.text('Chicken Curry'), findsOneWidget);
     });
 
     testWidgets('shows EmptyStateView when filtered list is empty', (
@@ -277,7 +314,8 @@ void main() {
       expect(find.text('No recipes found'), findsOneWidget);
     });
 
-    testWidgets('has AppBar titled "Recipes"', (tester) async {
+    // T014 — updated title test (fails until T019 implemented)
+    testWidgets('has AppBar titled "niessl.org recipes"', (tester) async {
       await tester.pumpWidget(
         _buildWithOverrides(
           const RecipeListScreen(),
@@ -285,7 +323,7 @@ void main() {
           tags: AsyncValue.data(_tags),
         ),
       );
-      expect(find.text('Recipes'), findsOneWidget);
+      expect(find.text('niessl.org recipes'), findsOneWidget);
     });
 
     testWidgets('search TextField is present', (tester) async {
@@ -350,6 +388,26 @@ void main() {
       await tester.pump();
 
       expect(find.byIcon(Icons.clear), findsNothing);
+    });
+  });
+
+  // ─── EqualizerLoadingView ─────────────────────────────────────────────────
+  // T015 — fail until T017 creates the widget
+  group('EqualizerLoadingView', () {
+    testWidgets('renders without throwing', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: EqualizerLoadingView())),
+      );
+      expect(find.byType(EqualizerLoadingView), findsOneWidget);
+    });
+
+    testWidgets('contains AnimatedBuilder widgets in the subtree', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: EqualizerLoadingView())),
+      );
+      expect(find.byType(AnimatedBuilder), findsWidgets);
     });
   });
 
@@ -421,11 +479,10 @@ void main() {
       expect(find.text('Pancakes'), findsWidgets);
     });
 
-    testWidgets('shows wakelock icon button (lightbulb_outline) by default', (
-      tester,
-    ) async {
+    // T024 — updated toggle test (fails until T029 implemented)
+    testWidgets('shows "Screen off" toggle label by default', (tester) async {
       await tester.pumpWidget(buildDetail());
-      expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
+      expect(find.text('Screen off'), findsOneWidget);
     });
 
     testWidgets('markdown content renders in SingleChildScrollView', (
@@ -434,6 +491,39 @@ void main() {
       await tester.pumpWidget(buildDetail());
       await tester.pumpAndSettle();
       expect(find.byType(SingleChildScrollView), findsOneWidget);
+    });
+
+    // T022 — loaded state with picture + source (fails until T028 implemented)
+    testWidgets(
+      'loaded state with media shows Hero, name heading, source link, Divider',
+      (tester) async {
+        await tester.pumpWidget(buildDetail(detail: _detailWithMedia));
+        await tester.pumpAndSettle();
+        // Name appears in AppBar AND as body heading = at least 2 matches
+        expect(find.text('Pancakes'), findsAtLeastNWidgets(2));
+        expect(find.byType(Hero), findsOneWidget);
+        expect(find.byIcon(Icons.open_in_new), findsOneWidget);
+        expect(find.byType(Divider), findsOneWidget);
+      },
+    );
+
+    // T023 — no source link when source is null (fails until T028 implemented)
+    testWidgets(
+      'loaded state without source shows no source link but has Divider',
+      (tester) async {
+        await tester.pumpWidget(buildDetail()); // _detail has no source
+        await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.open_in_new), findsNothing);
+        expect(find.byType(Divider), findsOneWidget);
+      },
+    );
+
+    // T024 — snackbar feedback on toggle tap (fails until T029 implemented)
+    testWidgets('tapping toggle shows SnackBar', (tester) async {
+      await tester.pumpWidget(buildDetail());
+      await tester.tap(find.text('Screen off'));
+      await tester.pump();
+      expect(find.byType(SnackBar), findsOneWidget);
     });
   });
 }
