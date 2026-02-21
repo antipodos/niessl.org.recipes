@@ -51,6 +51,17 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   integration_test:
     sdk: flutter
+  flutter_native_splash: ^2.4.7
+
+flutter_native_splash:
+  color: "#F5EFE7"
+  color_dark: "#2B1F1A"
+  android_12:
+    color: "#F5EFE7"
+    color_dark: "#2B1F1A"
+  android: true
+  ios: true
+  fullscreen: false
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

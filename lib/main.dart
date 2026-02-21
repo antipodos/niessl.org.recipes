@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'screens/recipe_list_screen.dart';
+import 'screens/splash_screen.dart';
 import 'theme.dart';
 
 void main() {
@@ -19,7 +19,7 @@ class RecipesApp extends StatelessWidget {
       darkTheme: appDarkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      home: const RecipeListScreen(),
+      home: const SplashScreen(),
     );
   }
 }
