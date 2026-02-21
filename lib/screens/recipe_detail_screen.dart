@@ -90,150 +90,141 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           message: error.toString(),
           onRetry: () => ref.invalidate(recipeDetailProvider(widget.url)),
         ),
-        // T028 — enriched detail body
-        data: (detail) => SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Photo header with Hero animation + name overlay
-              Hero(
-                tag: 'recipe_photo_${widget.url}',
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      widget.photoUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: widget.photoUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => Container(
-                                color: colorScheme.surfaceContainerHighest,
-                              ),
-                              errorWidget: (_, __, ___) => Container(
+        data: (detail) {
+          final hasValidSource =
+              detail.source != null &&
+              detail.source!.isNotEmpty &&
+              detail.source! != 'unknown';
+          final showOverlayBar =
+              widget.photoUrl != null && widget.tags.isNotEmpty;
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Photo header with Hero animation
+                Hero(
+                  tag: 'recipe_photo_${widget.url}',
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        widget.photoUrl != null
+                            ? CachedNetworkImage(
+                                imageUrl: widget.photoUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => Container(
+                                  color: colorScheme.surfaceContainerHighest,
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  color: colorScheme.surfaceContainerHighest,
+                                  child: Icon(
+                                    Icons.restaurant,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              )
+                            : Container(
                                 color: colorScheme.surfaceContainerHighest,
                                 child: Icon(
                                   Icons.restaurant,
                                   color: colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                            )
-                          : Container(
-                              color: colorScheme.surfaceContainerHighest,
-                              child: Icon(
-                                Icons.restaurant,
-                                color: colorScheme.onSurfaceVariant,
+                        // Semi-transparent info bar — tags + source over photo
+                        if (showOverlayBar)
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              color: Colors.white.withValues(alpha: 0.78),
+                              padding: const EdgeInsets.all(8),
+                              child: Wrap(
+                                spacing: 12,
+                                runSpacing: 4,
+                                children: [
+                                  ...widget.tags.map(
+                                    (tag) => Semantics(
+                                      label: tag,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.label_outline,
+                                            size: 14,
+                                            color: colorScheme.onSurface,
+                                            semanticLabel: '',
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            tag,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: colorScheme.onSurface,
+                                                ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                      // Gradient scrim
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                colorScheme.scrim.withValues(alpha: 0.65),
-                              ],
-                            ),
                           ),
-                        ),
-                      ),
-                      // Recipe name overlay
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Text(
-                            widget.name,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              color: Colors.white,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Tags chips (only when present)
-              if (widget.tags.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: widget.tags
-                        .map(
-                          (tag) => FilterChip(
-                            label: Text(tag),
-                            onSelected: (_) {
-                              ref
-                                  .read(selectedTagsProvider.notifier)
-                                  .update((s) => {...s, tag});
-                              Navigator.pop(context);
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              // Source attribution (only when present)
-              if (detail.source != null && detail.source!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: InkWell(
-                    onTap: () async {
-                      await launchUrl(Uri.parse(detail.source!));
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.open_in_new,
-                          size: 14,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          Uri.parse(detail.source!).host,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                        ),
                       ],
                     ),
                   ),
                 ),
-              const Divider(),
-              // Recipe markdown with larger body text
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: MarkdownBody(
-                  data: detail.recipe,
-                  styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-                    p: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 17,
-                      height: 1.5,
+                // Recipe markdown with larger body text
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: MarkdownBody(
+                    data: detail.recipe,
+                    styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                      p: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 17,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                if (hasValidSource) ...[
+                  const Divider(),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: GestureDetector(
+                      onTap: () async {
+                        await launchUrl(Uri.parse(detail.source!));
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.open_in_new,
+                            size: 14,
+                            color: colorScheme.primary,
+                            semanticLabel: '',
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            Uri.parse(detail.source!).host,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.primary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }
