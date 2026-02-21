@@ -30,7 +30,7 @@ class RecipeTile extends StatelessWidget {
                 child: Stack(
                   children: [
                     AspectRatio(
-                      aspectRatio: 1.6,
+                      aspectRatio: 1.0,
                       child: recipe.picture != null
                           ? CachedNetworkImage(
                               imageUrl: recipe.picture!,
@@ -75,7 +75,7 @@ class RecipeTile extends StatelessWidget {
                         ),
                         child: Text(
                           recipe.name,
-                          style: textTheme.titleSmall?.copyWith(
+                          style: textTheme.titleMedium?.copyWith(
                             color: Colors.white,
                           ),
                           maxLines: 2,

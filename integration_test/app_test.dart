@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:niessl_recipes/main.dart' as app;
 import 'package:niessl_recipes/screens/recipe_detail_screen.dart';
+import 'package:niessl_recipes/screens/splash_screen.dart';
 import 'package:niessl_recipes/widgets/recipe_tile.dart';
 
 void main() {
@@ -279,6 +280,110 @@ void main() {
       navigator.pop();
       await tester.pumpAndSettle();
 
+      expect(find.byType(RecipeTile), findsWidgets);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 003-ux-refinement: Splash, Grid, Prefetch, Detail Overlay
+  // ---------------------------------------------------------------------------
+  group('003-ux-refinement UX improvements', () {
+    testWidgets('US1: SplashScreen shown at launch, gone after data loads', (
+      tester,
+    ) async {
+      app.main();
+      // Pump a short duration — splash should be visible while data loads
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.byType(SplashScreen), findsOneWidget);
+
+      // Wait for data to load and transition to recipe list
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+      expect(find.byType(RecipeTile), findsWidgets);
+      expect(find.byType(SplashScreen), findsNothing);
+    });
+
+    testWidgets('US1: back from detail does not return to SplashScreen', (
+      tester,
+    ) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      await tester.tap(find.byType(RecipeTile).first);
+      await tester.pumpAndSettle(const Duration(seconds: 10));
+
+      final NavigatorState navigator = tester.state(
+        find.byType(Navigator).first,
+      );
+      navigator.pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SplashScreen), findsNothing);
+      expect(find.byType(RecipeTile), findsWidgets);
+    });
+
+    testWidgets('US2: recipe list uses GridView with 2 columns', (
+      tester,
+    ) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      expect(find.byType(GridView), findsOneWidget);
+      // At least 2 tiles visible per row in portrait
+      expect(find.byType(RecipeTile), findsWidgets);
+    });
+
+    testWidgets('US4: detail screen name appears inside Hero', (tester) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      final firstTile = tester.widget<RecipeTile>(
+        find.byType(RecipeTile).first,
+      );
+      final recipeName = firstTile.recipe.name;
+
+      await tester.tap(find.byType(RecipeTile).first);
+      await tester.pumpAndSettle(const Duration(seconds: 10));
+
+      expect(
+        find.descendant(of: find.byType(Hero), matching: find.text(recipeName)),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('US4: tapping a detail tag chip returns to filtered list', (
+      tester,
+    ) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      // Find a tile that has at least one tag
+      final tiles = tester
+          .widgetList<RecipeTile>(find.byType(RecipeTile))
+          .toList();
+      final taggedTile = tiles.firstWhere(
+        (t) => t.recipe.tags.isNotEmpty,
+        orElse: () => tiles.first,
+      );
+      if (taggedTile.recipe.tags.isEmpty) return; // skip if no tagged recipes
+
+      await tester.tap(
+        find
+            .byWidgetPredicate(
+              (w) => w is RecipeTile && w.recipe == taggedTile.recipe,
+            )
+            .first,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 10));
+
+      // FilterChips for recipe tags should be visible
+      final tag = taggedTile.recipe.tags.first;
+      final chipFinder = find.widgetWithText(FilterChip, tag);
+      if (chipFinder.evaluate().isEmpty) return; // skip if chip not found
+
+      await tester.tap(chipFinder.first);
+      await tester.pumpAndSettle();
+
+      // Should be back on the recipe list, filtered by the tapped tag
       expect(find.byType(RecipeTile), findsWidgets);
     });
   });

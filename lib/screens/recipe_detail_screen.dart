@@ -13,12 +13,14 @@ class RecipeDetailScreen extends ConsumerStatefulWidget {
   final String url;
   final String name;
   final String? photoUrl; // T026 — passed from tile for Hero continuity
+  final List<String> tags;
 
   const RecipeDetailScreen({
     super.key,
     required this.url,
     required this.name,
     this.photoUrl,
+    this.tags = const [],
   });
 
   @override
@@ -93,40 +95,101 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Photo header with Hero animation
+              // Photo header with Hero animation + name overlay
               Hero(
                 tag: 'recipe_photo_${widget.url}',
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
-                  child: widget.photoUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: widget.photoUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
-                            color: colorScheme.surfaceContainerHighest,
-                          ),
-                          errorWidget: (_, __, ___) => Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.restaurant,
-                              color: colorScheme.onSurfaceVariant,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      widget.photoUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: widget.photoUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                color: colorScheme.surfaceContainerHighest,
+                              ),
+                              errorWidget: (_, __, ___) => Container(
+                                color: colorScheme.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.restaurant,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: Icon(
+                                Icons.restaurant,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                      // Gradient scrim
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 100,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                colorScheme.scrim.withValues(alpha: 0.65),
+                              ],
                             ),
                           ),
-                        )
-                      : Container(
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.restaurant,
-                            color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      // Recipe name overlay
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Text(
+                            widget.name,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              // Recipe name as content heading
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Text(widget.name, style: theme.textTheme.headlineMedium),
-              ),
+              // Tags chips (only when present)
+              if (widget.tags.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: widget.tags
+                        .map(
+                          (tag) => FilterChip(
+                            label: Text(tag),
+                            onSelected: (_) {
+                              ref
+                                  .read(selectedTagsProvider.notifier)
+                                  .update((s) => {...s, tag});
+                              Navigator.pop(context);
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
               // Source attribution (only when present)
               if (detail.source != null && detail.source!.isNotEmpty)
                 Padding(

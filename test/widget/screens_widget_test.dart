@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:niessl_recipes/models/recipe.dart';
 import 'package:niessl_recipes/providers/providers.dart';
 import 'package:niessl_recipes/screens/recipe_detail_screen.dart';
 import 'package:niessl_recipes/screens/recipe_list_screen.dart';
+import 'package:niessl_recipes/screens/splash_screen.dart';
 import 'package:niessl_recipes/theme.dart';
 import 'package:niessl_recipes/widgets/empty_state_view.dart';
 import 'package:niessl_recipes/widgets/error_view.dart';
@@ -94,6 +97,67 @@ void _stubWakelock() {
 
 void main() {
   setUp(_stubWakelock);
+
+  // ─── SplashScreen ──────────────────────────────────────────────────────────
+  // T007 — fails until T009 creates SplashScreen
+  group('SplashScreen', () {
+    testWidgets('shows EqualizerLoadingView while appDataProvider is loading', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDataProvider.overrideWith(
+              (_) =>
+                  Completer<({List<RecipeSummary> recipes, List<Tag> tags})>()
+                      .future,
+            ),
+          ],
+          child: MaterialApp(theme: appLightTheme, home: const SplashScreen()),
+        ),
+      );
+      expect(find.byType(EqualizerLoadingView), findsOneWidget);
+    });
+
+    testWidgets('shows ErrorView when appDataProvider errors', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDataProvider.overrideWith(
+              (_) =>
+                  Future<({List<RecipeSummary> recipes, List<Tag> tags})>.error(
+                    'Network error',
+                  ),
+            ),
+          ],
+          child: MaterialApp(theme: appLightTheme, home: const SplashScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ErrorView), findsOneWidget);
+    });
+
+    testWidgets('navigates to RecipeListScreen when data loads', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDataProvider.overrideWith(
+              (_) async => (recipes: <RecipeSummary>[], tags: <Tag>[]),
+            ),
+            filteredRecipesProvider.overrideWith(
+              (_) => const AsyncValue.data(<RecipeSummary>[]),
+            ),
+            tagsProvider.overrideWith((_) => const AsyncValue.data(<Tag>[])),
+          ],
+          child: MaterialApp(theme: appLightTheme, home: const SplashScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(RecipeListScreen), findsOneWidget);
+    });
+  });
 
   // ─── LoadingView ───────────────────────────────────────────────────────────
   group('LoadingView', () {
@@ -229,6 +293,47 @@ void main() {
       );
       expect(find.byType(FilterChip), findsNothing);
     });
+
+    // T012 — fails until T014 changes AspectRatio to 1.0
+    testWidgets('renders with AspectRatio 1.0 (square)', (tester) async {
+      final recipe = const RecipeSummary(
+        name: 'Sourdough',
+        url: 'https://x.com',
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RecipeTile(recipe: recipe, onTap: () {}),
+          ),
+        ),
+      );
+      final aspectRatio = tester.widget<AspectRatio>(
+        find.byType(AspectRatio).first,
+      );
+      expect(aspectRatio.aspectRatio, equals(1.0));
+    });
+
+    // T012 — fails until T014 changes text style to titleMedium
+    testWidgets('recipe name uses titleMedium text style', (tester) async {
+      final recipe = const RecipeSummary(
+        name: 'Sourdough',
+        url: 'https://x.com',
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: appLightTheme,
+          home: Scaffold(
+            body: RecipeTile(recipe: recipe, onTap: () {}),
+          ),
+        ),
+      );
+      final tileElement = tester.element(find.byType(RecipeTile));
+      final titleMediumFontSize = Theme.of(
+        tileElement,
+      ).textTheme.titleMedium?.fontSize;
+      final text = tester.widget<Text>(find.text('Sourdough'));
+      expect(text.style?.fontSize, equals(titleMediumFontSize));
+    });
   });
 
   // ─── TagChipBar ────────────────────────────────────────────────────────────
@@ -354,6 +459,39 @@ void main() {
 
       expect(find.byType(RecipeDetailScreen), findsOneWidget);
       expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+    });
+
+    // T012 — fails until T015 replaces ListView with GridView
+    testWidgets('shows GridView (not ListView) when data is available', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildWithOverrides(
+          const RecipeListScreen(),
+          filteredRecipes: AsyncValue.data(_recipes),
+          tags: AsyncValue.data(_tags),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(GridView), findsOneWidget);
+    });
+
+    // T012 — fails until T015 passes tags: recipe.tags during navigation
+    testWidgets('tapping a tile navigates with recipe tags', (tester) async {
+      await tester.pumpWidget(
+        _buildWithOverrides(
+          const RecipeListScreen(),
+          filteredRecipes: AsyncValue.data(_recipes),
+          tags: AsyncValue.data(_tags),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(RecipeTile).first);
+      await tester.pumpAndSettle();
+      final detail = tester.widget<RecipeDetailScreen>(
+        find.byType(RecipeDetailScreen),
+      );
+      expect(detail.tags, equals(['sweet']));
     });
   });
 
@@ -524,6 +662,103 @@ void main() {
       await tester.tap(find.text('Screen off'));
       await tester.pump();
       expect(find.byType(SnackBar), findsOneWidget);
+    });
+
+    // T020 — fails until T022 renders FilterChips for tags
+    testWidgets('shows FilterChip for each tag when tags provided', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recipeDetailProvider.overrideWith((_, __) => Future.value(_detail)),
+          ],
+          child: MaterialApp(
+            theme: appLightTheme,
+            home: const RecipeDetailScreen(
+              url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+              name: 'Pancakes',
+              tags: ['Italian', 'Quick'],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(FilterChip, 'Italian'), findsOneWidget);
+      expect(find.widgetWithText(FilterChip, 'Quick'), findsOneWidget);
+    });
+
+    // T020 — fails until T022 adds name overlay inside Hero
+    testWidgets('recipe name appears inside Hero subtree when loaded', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildDetail(detail: _detailWithMedia));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: find.byType(Hero), matching: find.text('Pancakes')),
+        findsOneWidget,
+      );
+    });
+
+    // T020 — no FilterChip shown when tags is empty
+    testWidgets('shows no FilterChip when tags is empty', (tester) async {
+      await tester.pumpWidget(buildDetail(detail: _detailWithMedia));
+      await tester.pumpAndSettle();
+      expect(find.byType(FilterChip), findsNothing);
+    });
+
+    // T020 — standalone headlineMedium name below photo is removed after T022
+    testWidgets(
+      'standalone name heading below photo is removed after overlay added',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              recipeDetailProvider.overrideWith(
+                (_, __) => Future.value(_detailWithMedia),
+              ),
+            ],
+            child: MaterialApp(
+              theme: appLightTheme,
+              home: const RecipeDetailScreen(
+                url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+                name: 'Pancakes',
+                tags: ['Italian'],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // After T022: name only appears in AppBar + Hero overlay (no extra heading)
+        // Verify the name inside Hero exists — the standalone heading is gone
+        final heroNameFinder = find.descendant(
+          of: find.byType(Hero),
+          matching: find.text('Pancakes'),
+        );
+        expect(heroNameFinder, findsOneWidget);
+        // Total 'Pancakes' occurrences: AppBar (1) + Hero overlay (1) = 2
+        // Before T022: AppBar (1) + heading (1) = 2, but NO name inside Hero
+        // This test fails before T022 because the hero name finder finds nothing
+      },
+    );
+
+    // T004 — tags parameter (fails until T005 adds it to RecipeDetailScreen)
+    testWidgets('accepts tags parameter without error', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recipeDetailProvider.overrideWith((_, __) => Future.value(_detail)),
+          ],
+          child: const MaterialApp(
+            home: RecipeDetailScreen(
+              url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+              name: 'Pancakes',
+              tags: ['Italian', 'Vegan'],
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(RecipeDetailScreen), findsOneWidget);
     });
   });
 }
