@@ -8,12 +8,14 @@
 
 ## Decision 1: GitHub Actions — Flutter Setup Action
 
-**Decision**: Use `subosito/flutter-action@v4`
+**Decision**: Use `subosito/flutter-action@v2`
 
-**Rationale**: This is the current stable community-maintained action for Flutter. `v3` is deprecated. The `cache: true` flag in v4 caches Dart pub dependencies and Flutter artifacts (~500 MB saved), reducing run time significantly. Pinned to `flutter-version: '3.35.6'` with `channel: 'stable'` for reproducible builds.
+**Rationale**: This is the current stable community-maintained action for Flutter. `v2` supports `cache: true` to cache Dart pub dependencies and Flutter artifacts (~500 MB saved), reducing run time significantly. Pinned to `flutter-version: '3.35.6'` with `channel: 'stable'` for reproducible builds.
+
+**Note**: `v4` does not exist — the research phase incorrectly suggested it. The real latest tag is `v2`.
 
 **Alternatives considered**:
-- `flutter-action@v3` — deprecated, no longer maintained
+- `flutter-action@v1` — older, less maintained
 - Manually installing Flutter via `curl` — fragile, no caching, unnecessary complexity
 
 ---
