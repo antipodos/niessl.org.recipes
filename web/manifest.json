@@ -1,0 +1,36 @@
+{
+    "name": "niessl.org recipes",
+    "short_name": "Recipes",
+    "start_url": "/niessl.org.recipes/",
+    "scope": "/niessl.org.recipes/",
+    "display": "standalone",
+    "background_color": "#F5EFE7",
+    "theme_color": "#B85C38",
+    "description": "Recipe companion app for dinner.niessl.org",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
