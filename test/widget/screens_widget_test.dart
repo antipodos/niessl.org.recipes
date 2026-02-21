@@ -631,85 +631,8 @@ void main() {
       expect(find.byType(SingleChildScrollView), findsOneWidget);
     });
 
-    // T022 — loaded state with picture + source (fails until T028 implemented)
     testWidgets(
-      'loaded state with media shows Hero, name heading, source link, Divider',
-      (tester) async {
-        await tester.pumpWidget(buildDetail(detail: _detailWithMedia));
-        await tester.pumpAndSettle();
-        // Name appears in AppBar AND as body heading = at least 2 matches
-        expect(find.text('Pancakes'), findsAtLeastNWidgets(2));
-        expect(find.byType(Hero), findsOneWidget);
-        expect(find.byIcon(Icons.open_in_new), findsOneWidget);
-        expect(find.byType(Divider), findsOneWidget);
-      },
-    );
-
-    // T023 — no source link when source is null (fails until T028 implemented)
-    testWidgets(
-      'loaded state without source shows no source link but has Divider',
-      (tester) async {
-        await tester.pumpWidget(buildDetail()); // _detail has no source
-        await tester.pumpAndSettle();
-        expect(find.byIcon(Icons.open_in_new), findsNothing);
-        expect(find.byType(Divider), findsOneWidget);
-      },
-    );
-
-    // T024 — snackbar feedback on toggle tap (fails until T029 implemented)
-    testWidgets('tapping toggle shows SnackBar', (tester) async {
-      await tester.pumpWidget(buildDetail());
-      await tester.tap(find.text('Screen off'));
-      await tester.pump();
-      expect(find.byType(SnackBar), findsOneWidget);
-    });
-
-    // T020 — fails until T022 renders FilterChips for tags
-    testWidgets('shows FilterChip for each tag when tags provided', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            recipeDetailProvider.overrideWith((_, __) => Future.value(_detail)),
-          ],
-          child: MaterialApp(
-            theme: appLightTheme,
-            home: const RecipeDetailScreen(
-              url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
-              name: 'Pancakes',
-              tags: ['Italian', 'Quick'],
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.widgetWithText(FilterChip, 'Italian'), findsOneWidget);
-      expect(find.widgetWithText(FilterChip, 'Quick'), findsOneWidget);
-    });
-
-    // T020 — fails until T022 adds name overlay inside Hero
-    testWidgets('recipe name appears inside Hero subtree when loaded', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildDetail(detail: _detailWithMedia));
-      await tester.pumpAndSettle();
-      expect(
-        find.descendant(of: find.byType(Hero), matching: find.text('Pancakes')),
-        findsOneWidget,
-      );
-    });
-
-    // T020 — no FilterChip shown when tags is empty
-    testWidgets('shows no FilterChip when tags is empty', (tester) async {
-      await tester.pumpWidget(buildDetail(detail: _detailWithMedia));
-      await tester.pumpAndSettle();
-      expect(find.byType(FilterChip), findsNothing);
-    });
-
-    // T020 — standalone headlineMedium name below photo is removed after T022
-    testWidgets(
-      'standalone name heading below photo is removed after overlay added',
+      'loaded state with media shows Hero, source link below, and Divider',
       (tester) async {
         await tester.pumpWidget(
           ProviderScope(
@@ -723,22 +646,221 @@ void main() {
               home: const RecipeDetailScreen(
                 url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
                 name: 'Pancakes',
+                photoUrl:
+                    'https://dinner.niessl.org/recipes/pancakes/photo.jpg',
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // Name appears only in AppBar — NOT in the Hero overlay
+        expect(find.text('Pancakes'), findsOneWidget);
+        expect(find.byType(Hero), findsOneWidget);
+        // Source icon appears BELOW the photo (not inside Hero)
+        expect(find.byIcon(Icons.open_in_new), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(Hero),
+            matching: find.byIcon(Icons.open_in_new),
+          ),
+          findsNothing,
+        );
+        expect(find.byType(Divider), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'loaded state without source shows no source link and no Divider',
+      (tester) async {
+        await tester.pumpWidget(buildDetail()); // _detail has no source
+        await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.open_in_new), findsNothing);
+        expect(find.byType(Divider), findsNothing);
+      },
+    );
+
+    // T024 — snackbar feedback on toggle tap (fails until T029 implemented)
+    testWidgets('tapping toggle shows SnackBar', (tester) async {
+      await tester.pumpWidget(buildDetail());
+      await tester.tap(find.text('Screen off'));
+      await tester.pump();
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
+
+    testWidgets(
+      'shows tag text with label icon in overlay bar when tags provided',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              recipeDetailProvider.overrideWith(
+                (_, __) => Future.value(_detailWithMedia),
+              ),
+            ],
+            child: MaterialApp(
+              theme: appLightTheme,
+              home: const RecipeDetailScreen(
+                url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+                name: 'Pancakes',
+                photoUrl:
+                    'https://dinner.niessl.org/recipes/pancakes/photo.jpg',
+                tags: ['Italian', 'Quick'],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // Tags shown as plain text with label icon — no FilterChip
+        expect(find.text('Italian'), findsOneWidget);
+        expect(find.text('Quick'), findsOneWidget);
+        expect(find.byIcon(Icons.label_outline), findsWidgets);
+        expect(find.byType(FilterChip), findsNothing);
+      },
+    );
+
+    // T020 — no FilterChip shown when tags is empty
+    testWidgets('shows no FilterChip when tags is empty', (tester) async {
+      await tester.pumpWidget(buildDetail(detail: _detailWithMedia));
+      await tester.pumpAndSettle();
+      expect(find.byType(FilterChip), findsNothing);
+    });
+
+    testWidgets(
+      'recipe name does not appear inside Hero subtree (only in AppBar)',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              recipeDetailProvider.overrideWith(
+                (_, __) => Future.value(_detailWithMedia),
+              ),
+            ],
+            child: MaterialApp(
+              theme: appLightTheme,
+              home: const RecipeDetailScreen(
+                url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+                name: 'Pancakes',
+                photoUrl:
+                    'https://dinner.niessl.org/recipes/pancakes/photo.jpg',
                 tags: ['Italian'],
               ),
             ),
           ),
         );
         await tester.pumpAndSettle();
-        // After T022: name only appears in AppBar + Hero overlay (no extra heading)
-        // Verify the name inside Hero exists — the standalone heading is gone
-        final heroNameFinder = find.descendant(
-          of: find.byType(Hero),
-          matching: find.text('Pancakes'),
+        // Name must NOT appear inside the Hero subtree
+        expect(
+          find.descendant(
+            of: find.byType(Hero),
+            matching: find.text('Pancakes'),
+          ),
+          findsNothing,
         );
-        expect(heroNameFinder, findsOneWidget);
-        // Total 'Pancakes' occurrences: AppBar (1) + Hero overlay (1) = 2
-        // Before T022: AppBar (1) + heading (1) = 2, but NO name inside Hero
-        // This test fails before T022 because the hero name finder finds nothing
+        // Name still visible in AppBar only
+        expect(find.text('Pancakes'), findsOneWidget);
+      },
+    );
+
+    // T008a — overlay bar shows label icon + tag text inside Hero when photo + tags present
+    testWidgets(
+      'overlay bar shows label icon and tag text inside Hero when photo and tags set',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              recipeDetailProvider.overrideWith(
+                (_, __) => Future.value(_detailWithMedia),
+              ),
+            ],
+            child: MaterialApp(
+              theme: appLightTheme,
+              home: const RecipeDetailScreen(
+                url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+                name: 'Pancakes',
+                photoUrl:
+                    'https://dinner.niessl.org/recipes/pancakes/photo.jpg',
+                tags: ['Italian'],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.descendant(
+            of: find.byType(Hero),
+            matching: find.byIcon(Icons.label_outline),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(Hero),
+            matching: find.text('Italian'),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    // T008b — overlay bar absent from Hero when photoUrl is null (FR-008)
+    testWidgets('overlay bar absent from Hero when no photo', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recipeDetailProvider.overrideWith((_, __) => Future.value(_detail)),
+          ],
+          child: MaterialApp(
+            theme: appLightTheme,
+            home: const RecipeDetailScreen(
+              url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+              name: 'Pancakes',
+              tags: ['Italian'],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // No photo → no label icon in the Hero subtree
+      expect(
+        find.descendant(
+          of: find.byType(Hero),
+          matching: find.byIcon(Icons.label_outline),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets(
+      'source open_in_new icon appears below photo when source valid',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              recipeDetailProvider.overrideWith(
+                (_, __) => Future.value(_detailWithMedia),
+              ),
+            ],
+            child: MaterialApp(
+              theme: appLightTheme,
+              home: const RecipeDetailScreen(
+                url: 'https://dinner.niessl.org/recipes/pancakes/index.json',
+                name: 'Pancakes',
+                photoUrl:
+                    'https://dinner.niessl.org/recipes/pancakes/photo.jpg',
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // Source icon is present but NOT inside the Hero overlay bar
+        expect(find.byIcon(Icons.open_in_new), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(Hero),
+            matching: find.byIcon(Icons.open_in_new),
+          ),
+          findsNothing,
+        );
       },
     );
 

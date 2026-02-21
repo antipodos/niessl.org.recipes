@@ -245,7 +245,7 @@ void main() {
     });
 
     testWidgets(
-      'US6: detail screen shows name heading, photo area, and Divider',
+      'US6: detail screen shows name in AppBar, Hero photo area, and Divider',
       (tester) async {
         app.main();
         await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -258,9 +258,9 @@ void main() {
         await tester.tap(find.byType(RecipeTile).first);
         await tester.pumpAndSettle(const Duration(seconds: 10));
 
-        // Name appears in both AppBar and body heading.
-        expect(find.text(recipeName), findsAtLeastNWidgets(2));
-        // Divider always present (separates source/heading from markdown).
+        // Name appears in AppBar only (not in the Hero overlay).
+        expect(find.text(recipeName), findsOneWidget);
+        // Divider always present (separates overlay from markdown).
         expect(find.byType(Divider), findsOneWidget);
         // Hero widget for photo area.
         expect(find.byType(Hero), findsOneWidget);
@@ -332,59 +332,31 @@ void main() {
       expect(find.byType(RecipeTile), findsWidgets);
     });
 
-    testWidgets('US4: detail screen name appears inside Hero', (tester) async {
-      app.main();
-      await tester.pumpAndSettle(const Duration(seconds: 5));
+    testWidgets(
+      'US4: detail screen name appears in AppBar only (not in Hero)',
+      (tester) async {
+        app.main();
+        await tester.pumpAndSettle(const Duration(seconds: 5));
 
-      final firstTile = tester.widget<RecipeTile>(
-        find.byType(RecipeTile).first,
-      );
-      final recipeName = firstTile.recipe.name;
+        final firstTile = tester.widget<RecipeTile>(
+          find.byType(RecipeTile).first,
+        );
+        final recipeName = firstTile.recipe.name;
 
-      await tester.tap(find.byType(RecipeTile).first);
-      await tester.pumpAndSettle(const Duration(seconds: 10));
+        await tester.tap(find.byType(RecipeTile).first);
+        await tester.pumpAndSettle(const Duration(seconds: 10));
 
-      expect(
-        find.descendant(of: find.byType(Hero), matching: find.text(recipeName)),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('US4: tapping a detail tag chip returns to filtered list', (
-      tester,
-    ) async {
-      app.main();
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-
-      // Find a tile that has at least one tag
-      final tiles = tester
-          .widgetList<RecipeTile>(find.byType(RecipeTile))
-          .toList();
-      final taggedTile = tiles.firstWhere(
-        (t) => t.recipe.tags.isNotEmpty,
-        orElse: () => tiles.first,
-      );
-      if (taggedTile.recipe.tags.isEmpty) return; // skip if no tagged recipes
-
-      await tester.tap(
-        find
-            .byWidgetPredicate(
-              (w) => w is RecipeTile && w.recipe == taggedTile.recipe,
-            )
-            .first,
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 10));
-
-      // FilterChips for recipe tags should be visible
-      final tag = taggedTile.recipe.tags.first;
-      final chipFinder = find.widgetWithText(FilterChip, tag);
-      if (chipFinder.evaluate().isEmpty) return; // skip if chip not found
-
-      await tester.tap(chipFinder.first);
-      await tester.pumpAndSettle();
-
-      // Should be back on the recipe list, filtered by the tapped tag
-      expect(find.byType(RecipeTile), findsWidgets);
-    });
+        // Name must NOT be inside the Hero overlay
+        expect(
+          find.descendant(
+            of: find.byType(Hero),
+            matching: find.text(recipeName),
+          ),
+          findsNothing,
+        );
+        // Name still present in AppBar
+        expect(find.text(recipeName), findsOneWidget);
+      },
+    );
   });
 }
