@@ -151,10 +151,10 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.label_outline,
                                             size: 14,
-                                            color: colorScheme.onSurface,
+                                            color: Colors.black87,
                                             semanticLabel: '',
                                           ),
                                           const SizedBox(width: 4),
@@ -162,7 +162,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                             tag,
                                             style: theme.textTheme.bodySmall
                                                 ?.copyWith(
-                                                  color: colorScheme.onSurface,
+                                                  color: Colors.black87,
                                                 ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
