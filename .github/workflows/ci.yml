@@ -1,4 +1,4 @@
-name: Build, Test & Deploy
+name: CI
 
 on:
   push:
@@ -68,33 +68,3 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  build-apk:
-    name: Build Android APK
-    needs: test
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.6'
-          channel: 'stable'
-          cache: true
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: niessl-recipes-apk
-          path: build/app/outputs/apk/release/app-release.apk
-          retention-days: 90
-          if-no-files-found: error
