@@ -18,7 +18,7 @@
 
 **Purpose**: Understand the current state of `.github/workflows/ci.yml` before editing
 
-- [ ] T001 Read `.github/workflows/ci.yml` and note its current 3-job structure (test, build-web, build-apk) and trigger configuration
+- [X] T001 Read `.github/workflows/ci.yml` and note its current 3-job structure (test, build-web, build-apk) and trigger configuration
 
 ---
 
@@ -28,8 +28,8 @@
 
 **Independent Test**: Push a plain commit to `main` → observe only 2 jobs in Actions tab (test + build-web, no build-apk). Then push `v0.1.0` tag → observe 4 jobs in release.yml run and a GitHub Release appears.
 
-- [ ] T002 [US1] Modify `.github/workflows/ci.yml` — remove the `build-apk` job entirely; rename workflow to `CI`; keep `test` and `build-web` jobs unchanged; verify permissions remain `contents: read`, `pages: write`, `id-token: write`
-- [ ] T003 [US1] Create `.github/workflows/release.yml` with: trigger `on: push: tags: ['v[0-9]+.[0-9]+.[0-9]+']`; permissions `contents: write`, `pages: write`, `id-token: write`; 4 jobs in order: (1) `test` (flutter analyze + flutter test, timeout 15min), (2) `build-web` (needs: test; flutter build web --release --base-href=/niessl.org.recipes/; upload-pages-artifact@v3; deploy-pages@v4), (3) `build-apk` (needs: test; flutter build apk --release; upload-artifact@v4 name `niessl-recipes-apk-${{ github.ref_name }}` retention-days: 1), (4) `create-release` (needs: [build-web, build-apk]; download-artifact@v4; softprops/action-gh-release@v2 with name `${{ github.ref_name }}`, fixed body "## niessl.org recipes ${{ github.ref_name }}\n\n🌐 **Web app**: https://antipodos.github.io/niessl.org.recipes/\n📱 **Android APK**: Download from the assets below.", files: app-release.apk, draft: false, prerelease: false); all jobs use `subosito/flutter-action@v2` with `flutter-version: '3.35.6'`
+- [X] T002 [US1] Modify `.github/workflows/ci.yml` — remove the `build-apk` job entirely; rename workflow to `CI`; keep `test` and `build-web` jobs unchanged; verify permissions remain `contents: read`, `pages: write`, `id-token: write`
+- [X] T003 [US1] Create `.github/workflows/release.yml` with: trigger `on: push: tags: ['v[0-9]+.[0-9]+.[0-9]+']`; permissions `contents: write`, `pages: write`, `id-token: write`; 4 jobs in order: (1) `test` (flutter analyze + flutter test, timeout 15min), (2) `build-web` (needs: test; flutter build web --release --base-href=/niessl.org.recipes/; upload-pages-artifact@v3; deploy-pages@v4), (3) `build-apk` (needs: test; flutter build apk --release; upload-artifact@v4 name `niessl-recipes-apk-${{ github.ref_name }}` retention-days: 1), (4) `create-release` (needs: [build-web, build-apk]; download-artifact@v4; softprops/action-gh-release@v2 with name `${{ github.ref_name }}`, fixed body "## niessl.org recipes ${{ github.ref_name }}\n\n🌐 **Web app**: https://antipodos.github.io/niessl.org.recipes/\n📱 **Android APK**: Download from the assets below.", files: app-release.apk, draft: false, prerelease: false); all jobs use `subosito/flutter-action@v2` with `flutter-version: '3.35.6'`
 
 **Checkpoint**: ci.yml now has 2 jobs only. release.yml exists and is syntactically valid.
 
@@ -41,7 +41,7 @@
 
 **Independent Test**: After a release triggered by `v1.2.0`, download the APK and confirm `aapt dump badging app-release.apk | grep versionName` returns `versionName='1.2.0'`.
 
-- [ ] T004 [US2] Add version extraction to `build-apk` job in `.github/workflows/release.yml` — insert a step before `flutter build apk` that runs: `VERSION=${GITHUB_REF_NAME#v}`, `MAJOR=$(echo $VERSION | cut -d. -f1)`, `MINOR=$(echo $VERSION | cut -d. -f2)`, `PATCH=$(echo $VERSION | cut -d. -f3)`, `BUILD_NUMBER=$((MAJOR * 10000 + MINOR * 100 + PATCH))`, `echo "VERSION=$VERSION" >> $GITHUB_ENV`, `echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV`; update `flutter build apk` command to `flutter build apk --build-name=$VERSION --build-number=$BUILD_NUMBER --release`
+- [X] T004 [US2] Add version extraction to `build-apk` job in `.github/workflows/release.yml` — insert a step before `flutter build apk` that runs: `VERSION=${GITHUB_REF_NAME#v}`, `MAJOR=$(echo $VERSION | cut -d. -f1)`, `MINOR=$(echo $VERSION | cut -d. -f2)`, `PATCH=$(echo $VERSION | cut -d. -f3)`, `BUILD_NUMBER=$((MAJOR * 10000 + MINOR * 100 + PATCH))`, `echo "VERSION=$VERSION" >> $GITHUB_ENV`, `echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV`; update `flutter build apk` command to `flutter build apk --build-name=$VERSION --build-number=$BUILD_NUMBER --release`
 
 **Checkpoint**: release.yml build-apk job derives versionName from tag (e.g., tag `v1.2.0` → `--build-name=1.2.0 --build-number=10200`).
 
@@ -53,7 +53,7 @@
 
 **Independent Test**: Open `README.md` on GitHub and confirm within 30 seconds: app purpose is clear, web link is present, APK download path is described, release instructions are provided, speckit is linked.
 
-- [ ] T005 [P] [US3] Write `README.md` — replace Flutter template with 5 required sections: (1) H1 "niessl.org recipes" + 1-paragraph app description (recipe companion app for dinner.niessl.org); (2) "Live web app" section with direct link to `https://antipodos.github.io/niessl.org.recipes/`; (3) "Getting the Android app" section explaining to visit the GitHub Releases page and sideload the APK; (4) "Creating a release" section with step-by-step instructions (`git tag vX.Y.Z && git push origin vX.Y.Z`) explaining this triggers the automated release pipeline; (5) "About this project" section noting it is an experiment in spec-driven development, linking to `https://github.com/github/spec-kit`
+- [X] T005 [P] [US3] Write `README.md` — replace Flutter template with 5 required sections: (1) H1 "niessl.org recipes" + 1-paragraph app description (recipe companion app for dinner.niessl.org); (2) "Live web app" section with direct link to `https://antipodos.github.io/niessl.org.recipes/`; (3) "Getting the Android app" section explaining to visit the GitHub Releases page and sideload the APK; (4) "Creating a release" section with step-by-step instructions (`git tag vX.Y.Z && git push origin vX.Y.Z`) explaining this triggers the automated release pipeline; (5) "About this project" section noting it is an experiment in spec-driven development, linking to `https://github.com/github/spec-kit`
 
 **Checkpoint**: README renders correctly on GitHub with all 5 sections visible.
 
@@ -63,7 +63,7 @@
 
 **Purpose**: Commit, validate CI behavior, and perform acceptance verification.
 
-- [ ] T006 Commit changes to branch `006-release-management` — stage `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `README.md`; run `flutter analyze` to confirm no issues introduced
+- [X] T006 Commit changes to branch `006-release-management` — stage `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `README.md`; run `flutter analyze` to confirm no issues introduced
 - [ ] T007 Push branch `006-release-management`; open PR to `main`; observe CI workflow in Actions tab — confirm it runs under name "CI" with exactly 2 jobs (`test` and `build-web`) and no `build-apk` job
 - [ ] T008 Merge PR to `main`; push tag `v0.1.0` (`git tag v0.1.0 && git push origin v0.1.0`); verify in Actions tab that "Release" workflow runs with 4 jobs; verify GitHub Releases tab shows release `v0.1.0` with APK asset and correct body containing the web app link
 
