@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   test:
@@ -34,40 +32,6 @@ jobs:
 
       - name: Run tests
         run: flutter test
-
-  build-web:
-    name: Build & Deploy Web
-    needs: test
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.6'
-          channel: 'stable'
-          cache: true
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Build web
-        run: flutter build web --release --base-href=/niessl.org.recipes/
-
-      - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: build/web
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
 
   build-apk:
     name: Build Release APK
@@ -114,7 +78,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [build-web, build-apk]
+    needs: build-apk
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
